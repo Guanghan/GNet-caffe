@@ -10,7 +10,7 @@
 #include "caffe/test/test_gradient_check_util.hpp"
 
 namespace caffe {
-
+/* @Ning */
 
 
 }  // namespace caffe

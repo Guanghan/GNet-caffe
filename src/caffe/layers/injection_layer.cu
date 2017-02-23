@@ -8,7 +8,9 @@ namespace caffe {
 
 // Create an Injection Class
 
+/* Just like cpm_data_layer, the cuda version is not provided */
 
-INSTANTIATE_LAYER_GPU_FUNCS(InjectionLayer);
+
+INSTANTIATE_LAYER_GPU_FUNCS(InjectDataLayer);
 
 }  // namespace caffe

@@ -20,7 +20,7 @@ namespace caffe {
 template <typename Dtype>
 CPMDataLayer<Dtype>::CPMDataLayer(const LayerParameter& param)
   : BasePrefetchingDataLayer<Dtype>(param),
-    reader_(param, true) {
+    reader_(param, true) {  //multiple inheritence
 }
 
 template <typename Dtype>
@@ -30,8 +30,8 @@ CPMDataLayer<Dtype>::~CPMDataLayer() {
 
 template <typename Dtype>
 void CPMDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-  
+                                         const vector<Blob<Dtype>*>& top) {
+
   // Read a data point, and use it to initialize the top blob.
   Datum& datum = *(reader_.full().peek());
   LOG(INFO) << datum.height() << " " << datum.width() << " " << datum.channels();
@@ -51,11 +51,11 @@ void CPMDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       this->prefetch_[i].data_.Reshape(batch_size, datum.channels(), crop_size, crop_size);
     }
     this->transformed_data_.Reshape(1, datum.channels(), crop_size, crop_size);
-  } 
+  }
   else {
     //const int height = this->phase_ != TRAIN ? datum.height() :
     //  this->layer_param_.transform_param().crop_size_y();
-    
+
     //const int width = this->phase_ != TRAIN ? datum.width() :
     //  this->layer_param_.transform_param().crop_size_x();
 
@@ -120,10 +120,8 @@ void CPMDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         DecodeDatumNative(&datum);
       }
     }
-    batch->data_.Reshape(1, datum.channels(),
-        datum.height(), datum.width());
-        this->transformed_data_.Reshape(1, datum.channels(),
-        datum.height(), datum.width());
+    batch->data_.Reshape(1, datum.channels(), datum.height(), datum.width());
+    this->transformed_data_.Reshape(1, datum.channels(), datum.height(), datum.width());
   }
 
   Dtype* top_data = batch->data_.mutable_cpu_data();
@@ -164,7 +162,7 @@ void CPMDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     if (datum.encoded()) {
       this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     } else {
-      this->data_transformer_->Transform_nv(datum, 
+      this->data_transformer_->Transform_nv(datum,
         &(this->transformed_data_),
         &(this->transformed_label_), cnt);
       ++cnt;

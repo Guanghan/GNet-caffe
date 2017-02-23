@@ -406,7 +406,7 @@ message LayerParameter {
   optional CPMDataParameter cpmdata_param = 147;
   optional ROIPoolingParameter roi_pooling_param = 148;
 
-  optional InjectionParameter injection_param = 149;
+  optional InjectDataParameter inject_data_param = 149; /* @Ning */
   }
 // Message that stores parameters used to apply transformation
 // to the data layer's data
@@ -1281,8 +1281,8 @@ message CPMDataParameter {
 }
 // DEPRECATED: use LayerParameter.
 
-message InjectionParameter {
-
+message InjectDataParameter {
+  /* @Ning */
 }
 
 message V1LayerParameter {

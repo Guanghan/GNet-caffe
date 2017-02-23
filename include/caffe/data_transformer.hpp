@@ -39,7 +39,27 @@ class DataTransformer {
    *    set_cpu_data() is used. See data_layer.cpp for an example.
    */
   void Transform(const Datum& datum, Blob<Dtype>* transformed_blob);
-  void Transform_nv(const Datum& datum, Blob<Dtype>* transformed_blob, Blob<Dtype>* transformed_label_blob, int cnt); //image and label
+
+  /**
+  * @brief Applies the transformation to both the image data and the ground truth label
+  *        This is introduced by CPM.
+  */
+  void Transform_nv(const Datum& datum,
+                    Blob<Dtype>* transformed_blob,
+                    Blob<Dtype>* transformed_label_blob,
+                    int cnt); //image and label
+
+  /**
+  * @brief Applies the transformation to both the image data, the ground truth label, and the encoded_feature
+  *        This is introduced by Guanghan Ning.
+  * @Ning
+  */
+  void Transform_inject(const Datum& datum,
+                        Blob<Dtype>* transformed_blob,
+                        Blob<Dtype>* transformed_label_blob,
+                        Blob<Dtype>* transformed_encoded_feature,
+                        int cnt); //image, label, and encoded_feature
+
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to a vector of Datum.
@@ -142,6 +162,13 @@ class DataTransformer {
     vector<int> isVisible;
   };
 
+  /* @Ning */
+  struct EncodedFeature{
+    vector<float> encoded_feature;
+    int feature_dimension;
+    string feature_type;
+  }
+
   struct MetaData {
     string dataset;
     Size img_size;
@@ -192,6 +219,7 @@ class DataTransformer {
 
   void Transform(const Datum& datum, Dtype* transformed_data);
   void Transform_nv(const Datum& datum, Dtype* transformed_data, Dtype* transformed_label, int cnt);
+  void Transform_inject(const Datum& datum, Dtype* transformed_data, Dtype* transformed_label, int cnt); /* @Ning */
   void ReadMetaData(MetaData& meta, const string& data, size_t offset3, size_t offset1);
   void TransformMetaJoints(MetaData& meta);
   void TransformJoints(Joints& joints);
