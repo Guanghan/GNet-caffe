@@ -58,6 +58,7 @@ class DataTransformer {
                         Blob<Dtype>* transformed_blob,
                         Blob<Dtype>* transformed_label_blob,
                         Blob<Dtype>* transformed_encoded_feature,
+                        Blob<Dtype>* transformed_encoded_edge_feature,
                         int cnt); //image, label, and encoded_feature
 
   /**
@@ -167,7 +168,7 @@ class DataTransformer {
     vector<float> encoded_feature;
     int feature_dimension;
     string feature_type;
-  }
+  };
 
   struct MetaData {
     string dataset;
@@ -187,6 +188,14 @@ class DataTransformer {
     vector<float> scale_other; //length is numOtherPeople
     vector<Joints> joint_others; //length is numOtherPeople
   };
+
+  /* @Ning */
+  void genEncodedFeatures(MetaData meta,
+                          Dtype* transformed_data,
+                          int ht,
+                          int wid,
+                          Dtype* transformed_encoded_feature,
+                          Dtype* transformed_encoded_edge_feature);
 
   void generateLabelMap(Dtype*, Mat&, MetaData meta);
   void visualize(Mat& img, MetaData meta, AugmentSelection as);
@@ -219,7 +228,7 @@ class DataTransformer {
 
   void Transform(const Datum& datum, Dtype* transformed_data);
   void Transform_nv(const Datum& datum, Dtype* transformed_data, Dtype* transformed_label, int cnt);
-  void Transform_inject(const Datum& datum, Dtype* transformed_data, Dtype* transformed_label, int cnt); /* @Ning */
+  void Transform_inject(const Datum& datum, Dtype* transformed_data, Dtype* transformed_label, Dtype* transformed_inject_feature, Dtype* transformed_inject_edge_feature, int cnt); /* @Ning */
   void ReadMetaData(MetaData& meta, const string& data, size_t offset3, size_t offset1);
   void TransformMetaJoints(MetaData& meta);
   void TransformJoints(Joints& joints);

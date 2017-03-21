@@ -527,57 +527,49 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
 }
 
 /* @Ning */
-template<typename Dtype> void DataTransformer<Dtype>::Transform_inject(const Datum& datum, Blob<Dtype>* transformed_data, Blob<Dtype>* transformed_label, int cnt) {
-  //std::cout << "Function 2 is used"; std::cout.flush();
+template<typename Dtype> void DataTransformer<Dtype>::Transform_inject(const Datum& datum,
+                                                                       Blob<Dtype>* transformed_data,
+                                                                       Blob<Dtype>* transformed_label,
+                                                                       Blob<Dtype>* transformed_encoded_feature,
+                                                                       Blob<Dtype>* transformed_encoded_edge_feature,
+                                                                       int cnt) {
+  // First get Dtype data ready, then call the other Transform_inject function
   const int datum_channels = datum.channels();
-  //const int datum_height = datum.height();
-  //const int datum_width = datum.width();
-
   const int im_channels = transformed_data->channels();
-  //const int im_height = transformed_data->height();
-  //const int im_width = transformed_data->width();
   const int im_num = transformed_data->num();
-
-  //const int lb_channels = transformed_label->channels();
-  //const int lb_height = transformed_label->height();
-  //const int lb_width = transformed_label->width();
   const int lb_num = transformed_label->num();
 
-  //LOG(INFO) << "image shape: " << transformed_data->num() << " " << transformed_data->channels() << " "
-  //                             << transformed_data->height() << " " << transformed_data->width();
-  //LOG(INFO) << "label shape: " << transformed_label->num() << " " << transformed_label->channels() << " "
-  //                             << transformed_label->height() << " " << transformed_label->width();
+  //LOG(INFO) << "encoded_feature shape: " << transformed_encoded_feature->num() << " " << transformed_encoded_feature->channels() << " "
+  //                                       << transformed_encoded_feature->height() << " " << transformed_encoded_feature->width();
 
   CHECK_EQ(datum_channels, 4);
   CHECK_EQ(im_channels, 4);
   CHECK_EQ(im_num, lb_num);
-  //CHECK_LE(im_height, datum_height);
-  //CHECK_LE(im_width, datum_width);
   CHECK_GE(im_num, 1);
-
-  //const int crop_size = param_.crop_size();
-
-  // if (crop_size) {
-  //   CHECK_EQ(crop_size, im_height);
-  //   CHECK_EQ(crop_size, im_width);
-  // } else {
-  //   CHECK_EQ(datum_height, im_height);
-  //   CHECK_EQ(datum_width, im_width);
-  // }
 
   Dtype* transformed_data_pointer = transformed_data->mutable_cpu_data();
   Dtype* transformed_label_pointer = transformed_label->mutable_cpu_data();
+  Dtype* transformed_encoded_feature_pointer = transformed_encoded_feature->mutable_cpu_data();
+  Dtype* transformed_encoded_edge_feature_pointer = transformed_encoded_edge_feature->mutable_cpu_data();
 
-  Transform_nv(datum, transformed_data_pointer, transformed_label_pointer, cnt); //call function 1
+  Transform_inject(datum,
+                   transformed_data_pointer,
+                   transformed_label_pointer,
+                   transformed_encoded_feature_pointer,
+                   transformed_encoded_edge_feature_pointer,
+                   cnt); //call the next function
 }
 
 /* @Ning */
-template<typename Dtype> void DataTransformer<Dtype>::Transform_inject(const Datum& datum, Dtype* transformed_data, Dtype* transformed_label, int cnt) {
+template<typename Dtype> void DataTransformer<Dtype>::Transform_inject(const Datum& datum,
+                                                                       Dtype* transformed_data,
+                                                                       Dtype* transformed_label,
+                                                                       Dtype* transformed_encoded_feature,
+                                                                       Dtype* transformed_encoded_edge_feature,
+                                                                       int cnt) {
 
-  //TODO: some parameter should be set in prototxt
   int clahe_tileSize = param_.clahe_tile_size();
   int clahe_clipLimit = param_.clahe_clip_limit();
-  //float targetDist = 41.0/35.0;
   AugmentSelection as = {
     false,
     0.0,
@@ -591,18 +583,11 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_inject(const Dat
   const int datum_height = datum.height();
   const int datum_width = datum.width();
 
-  //const int crop_size = param_.crop_size();
-  //const Dtype scale = param_.scale();
-  //const bool do_mirror = param_.mirror() && Rand(2);
-  //const bool has_mean_file = param_.has_mean_file();
   const bool has_uint8 = data.size() > 0;
-  //const bool has_mean_values = mean_values_.size() > 0;
   int crop_x = param_.crop_size_x();
   int crop_y = param_.crop_size_y();
 
   CHECK_GT(datum_channels, 0);
-  //CHECK_GE(datum_height, crop_size);
-  //CHECK_GE(datum_width, crop_size);
 
   //before any transformation, get the image from datum
   Mat img = Mat::zeros(datum_height, datum_width, CV_8UC3);
@@ -635,6 +620,7 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_inject(const Dat
   int offset1 = datum_width;
   ReadMetaData(meta, data, offset3, offset1);
   if(param_.transform_body_joint()) // we expect to transform body joints, and not to transform hand joints
+    //@Ning Why not the hand?
     TransformMetaJoints(meta);
 
   //visualize original
@@ -662,7 +648,8 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_inject(const Dat
     as.flip = augmentation_flip(img_temp3, img_aug, meta);
     //LOG(INFO) << meta.joint_self.joints.size();
     //LOG(INFO) << meta.joint_self.joints[0];
-    if(param_.visualize())
+
+    if(param_.visualize()) //@Ning
       visualize(img_aug, meta, as);
   }
   else {
@@ -672,9 +659,6 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_inject(const Dat
     as.flip = 0;
     as.degree = 0;
   }
-  //LOG(INFO) << "scale: " << as.scale << "; crop:(" << as.crop.width << "," << as.crop.height
-  //          << "); flip:" << as.flip << "; degree: " << as.degree;
-
   //copy transformed img (img_aug) into transformed_data, do the mean-subtraction here
   offset = img_aug.rows * img_aug.cols;
   for (int i = 0; i < img_aug.rows; ++i) {
@@ -688,14 +672,85 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_inject(const Dat
   }
 
   putGaussianMaps(transformed_data + 3*offset, meta.objpos, 1, img_aug.cols, img_aug.rows, param_.sigma_center());
-  //LOG(INFO) << "image transformation done!";
   generateLabelMap(transformed_label, img_aug, meta);
 
-  //starts to visualize everything (transformed_data in 4 ch, label) fed into conv1
-  //if(param_.visualize()){
-    //dumpEverything(transformed_data, transformed_label, meta);
-  //}
+  /* @Ning */
+  genEncodedFeatures(meta,  //input: transformed meta data
+                     transformed_data,
+                     img_aug.rows,
+                     img_aug.cols,
+                     transformed_encoded_feature,                //output: spatial feature pointer
+                     transformed_encoded_edge_feature);         //output: appearance feature pointer
 }
+
+
+/* @Ning Generate Encoded Features given transformed ground truth label and image */
+template<typename Dtype>
+void DataTransformer<Dtype>::genEncodedFeatures(MetaData meta,
+                                                Dtype* transformed_data,
+                                                int ht,
+                                                int wid,
+                                                Dtype* transformed_encoded_feature,
+                                                Dtype* transformed_encoded_edge_feature){
+  // 1. Generate spatial features
+  // clear out transformed_label, it may remain things for last batch
+  int feat_size_x = 1;
+  int feat_size_y = 1;
+  int feat_size_c = 224;
+  for (int i = 0; i < 1 * feat_size_c * feat_size_x * feat_size_y; i++){
+    transformed_encoded_feature[i] = 0;
+  }
+
+  // Fill in the encoded Features
+  int np = param_.num_parts();
+  for (int i = 0; i < np; i++){
+    //Need to change. Assuming fixed feat_size now.
+    transformed_encoded_feature[3*i] = meta.joint_self.joints[i].x / wid;
+    transformed_encoded_feature[3*i + 1] = meta.joint_self.joints[i].y / ht;
+    transformed_encoded_feature[3*i + 2] = (meta.joint_self.isVisible[i] == 1)?1:0;
+    // LOG(INFO) << "Encoded Feature " << transformed_encoded_feature[3*i] << " "
+    //                                 << transformed_encoded_feature[3*i + 1]<< " "
+    //                                 << transformed_encoded_feature[3*i + 2]<< " ";
+  }
+
+  // Extract Line features with Hough Transform
+  int ct = 0;
+  const int offset = 3*np;
+  double x0, y0, x1, y1, theta, radius;
+  for (int i = 0; i < np-1; i++){
+    for (int j = i+1; j < np; j++){
+      x0 = meta.joint_self.joints[i].x / wid * 64;
+      y0 = meta.joint_self.joints[i].y / ht * 64;
+      x1 = meta.joint_self.joints[j].x / wid * 64;
+      y1 = meta.joint_self.joints[j].y / ht * 64;
+
+      if (y1 - y0 == 0){
+        // LOG(INFO) << "Bad! y1 == y0"<< " ";
+        theta = 0;
+        radius = 0;
+      }
+      else{
+        theta = atan((x0 - x1)/(y1 - y0));
+        radius = (x1 * cos(theta) + y1 * sin(theta)) / 64; //normalize to < 1
+      }
+      // LOG(INFO) << "Encoded Feature " << theta << " "
+      //                                 << radius << " ";
+
+      transformed_encoded_feature[offset + 2*ct] = theta;
+      transformed_encoded_feature[offset + 2*ct + 1] = radius;
+      ct++;
+    }
+  }
+
+  // ----------------------------------------
+  // 1. Generate Edge Histogram Features
+
+
+
+
+}
+
+
 template<typename Dtype>
 float DataTransformer<Dtype>::augmentation_scale(Mat& img_src, Mat& img_temp, MetaData& meta) {
   float dice = static_cast <float> (rand()) / static_cast <float> (RAND_MAX); //[0,1]

@@ -59,6 +59,8 @@ template <typename Dtype>
 class Batch {
  public:
   Blob<Dtype> data_, label_;
+  Blob<Dtype> encoded_feature_; //@Ning
+  Blob<Dtype> encoded_edge_feature_; //@Ning
 };
 
 template <typename Dtype>
@@ -105,7 +107,7 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual inline const char* type() const { return "Data"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int MaxTopBlobs() const { return 3; } //@Ning, change 2 to 3
 
  protected:
   virtual void load_batch(Batch<Dtype>* batch);
@@ -125,13 +127,15 @@ class CPMDataLayer : public BasePrefetchingDataLayer<Dtype> {
     virtual inline const char* type() const { return "CPMData"; }
     virtual inline int ExactNumBottomBlobs() const { return 0; }
     virtual inline int MinTopBlobs() const { return 1; }
-    virtual inline int MaxTopBlobs() const { return 2; }
+    virtual inline int MaxTopBlobs() const { return 4; } //@Ning
 
   protected:
     virtual void load_batch(Batch<Dtype>* batch);
     //void generateLabelMap();
 
     DataReader reader_;
+    Blob<Dtype> transformed_encoded_feature_; //add another blob
+    Blob<Dtype> transformed_encoded_edge_feature_; //add another blob
     Blob<Dtype> transformed_label_; // add another blob
     //Blob<Dtype> transformed_label_all_; // all peaks, including others
 };
@@ -157,11 +161,13 @@ class InjectDataLayer : public CPMDataLayer<Dtype> {
   virtual inline const char* type() const { return "InjectData"; } //override data type
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int MaxTopBlobs() const { return 3; }
 
  protected:
   virtual void load_batch(Batch<Dtype>* batch);
-  Blob<Dtype> transformed_inject_feature_; //add another blob
+  Blob<Dtype> transformed_encoded_feature_; //add another blob
+  Blob<Dtype> transformed_encoded_edge_feature_; //add another blob
+  DataReader reader_;
 };
 
 /**

@@ -49,6 +49,9 @@ template <typename Dtype>
 class Batch {
  public:
   Blob<Dtype> data_, label_;
+  /* @Ning */
+  Blob<Dtype> encoded_feature_;
+  Blob<Dtype> encoded_edge_feature_;
 };
 
 template <typename Dtype>

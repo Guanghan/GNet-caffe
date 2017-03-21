@@ -21,7 +21,9 @@ namespace caffe {
 // constructor
 template <typename Dtype>
 InjectDataLayer<Dtype>::InjectDataLayer(const LayerParameter& param)
-  : CPMDataLayer<Dtype>(param), reader_(param, true) {  //multiple inheritence
+  : CPMDataLayer<Dtype>(param),  reader_(param, true) {  //multiple inheritence
+  //: BasePrefetchingDataLayer<Dtype>(param), reader_(param, true) {  //multiple inheritence
+
 }
 
 
@@ -67,10 +69,10 @@ void InjectDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     this->transformed_data_.Reshape(1, 4, height, width);
   }
-  LOG(INFO) << "output data size: " << top[0]->num() << ","
-            << top[0]->channels() << ","
-            << top[0]->height() << ","
-            << top[0]->width();
+  // LOG(INFO) << "output data size: " << top[0]->num() << ","
+  //           << top[0]->channels() << ","
+  //           << top[0]->height() << ","
+  //           << top[0]->width();
 
   // label
   if (this->output_labels_) {
@@ -89,7 +91,24 @@ void InjectDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   /*
   TODO: Add the generation of encoded_feature from ground truth (e.g., joint visibility)
   */
-  this->transformed_inject_feature = 0;
+  const int feat_size_x = this->layer_param_.inject_data_param().feat_size_x();
+  const int feat_size_y = this->layer_param_.inject_data_param().feat_size_y();
+
+  if (feat_size_x > 0 && feat_size_y > 0) {
+    top[2]->Reshape(batch_size, datum.channels(), feat_size_x, feat_size_y);
+
+    for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+      this->prefetch_[i].data_.Reshape(batch_size, datum.channels(), feat_size_x, feat_size_y);
+    }
+    //@Ning By reshaping, the feature's mutable_cpu_data allocates specific amount of data
+    this->transformed_encoded_feature_.Reshape(1, 1, feat_size_x, feat_size_y);
+    //this->transformed_encoded_feature_.Reshape(1, datum.channels(), feat_size_x, feat_size_y);
+  }
+  LOG(INFO) << "output data size: " << top[2]->num() << ","
+            << 1 << ","
+            //<< top[2]->channels() << ","
+            << feat_size_x << ","
+            << feat_size_y;
 
 }
 
@@ -127,10 +146,12 @@ void InjectDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
   Dtype* top_data = batch->data_.mutable_cpu_data();
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
+  //Dtype* top_feature = batch->encoded_feature_.mutable_cpu_data(); /* @Ning : Need to add. Batch class only has data_ and label_ */
 
   if (this->output_labels_) {
     top_label = batch->label_.mutable_cpu_data();
   }
+
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
     timer.Start();
@@ -154,31 +175,34 @@ void InjectDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     }
     decod_time += timer.MicroSeconds();
 
-    // Apply data transformations (mirror, scale, crop...)
+    // Apply data transformations (mirror, scale, crop...) for each piece in the batch
     timer.Start();
     const int offset_data = batch->data_.offset(item_id);
     const int offset_label = batch->label_.offset(item_id);
     this->transformed_data_.set_cpu_data(top_data + offset_data);
     this->transformed_label_.set_cpu_data(top_label + offset_label);
+    /* @Ning */
+    // I do not need to set_cpu_data because inject_feature depends on already
+    // transformed data and label, which happens later
+
+
     if (datum.encoded()) {
       this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     } else {
-      this->data_transformer_->Transform_nv(datum,
-                                            &(this->transformed_data_),
-                                            &(this->transformed_label_),
-                                            cnt);
+      /*
+      TODO: Add the calling of transforming encoded_feature from data_transformer.cpp
+      */
+      this->data_transformer_->Transform_inject(datum,
+                                                &(this->transformed_data_),
+                                                &(this->transformed_label_),
+                                                &(this->transformed_encoded_feature_),
+                                                &(this->transformed_encoded_feature_),
+                                                cnt);
       ++cnt;
     }
     trans_time += timer.MicroSeconds();
 
     reader_.free().push(const_cast<Datum*>(&datum));
-
-    /*
-    TODO: Add the calling of transforming encoded_feature from data_transformer.cpp
-    */
-    this->data_transformer_->Transform_encoded_feature();
-
-
   }
   batch_timer.Stop();
 
