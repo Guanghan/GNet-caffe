@@ -20,6 +20,9 @@ using namespace std;
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 
+// @Ning : Add our limb HOG feature extractor
+#include "caffe/HOG/utils.h"
+
 namespace caffe {
 
 template<typename Dtype>
@@ -735,7 +738,6 @@ void DataTransformer<Dtype>::genEncodedFeatures(MetaData meta,
       }
       // LOG(INFO) << "Encoded Feature " << theta << " "
       //                                 << radius << " ";
-
       transformed_encoded_feature[offset + 2*ct] = theta;
       transformed_encoded_feature[offset + 2*ct + 1] = radius;
       ct++;
@@ -743,11 +745,87 @@ void DataTransformer<Dtype>::genEncodedFeatures(MetaData meta,
   }
 
   // ----------------------------------------
-  // 1. Generate Edge Histogram Features
+  // 2. Generate Edge Histogram Features
+  int feat_edge_size_x = 1;
+  int feat_edge_size_y = 1;
+  int feat_edge_size_c = 64;
+  for (int i = 0; i < 1 * feat_edge_size_c * feat_edge_size_x * feat_edge_size_y; i++){
+    transformed_encoded_edge_feature[i] = 0;
+    //LOG(INFO) << "Encoded Edge Feature "
+     //         << transformed_encoded_edge_feature[i] << " ";
+  }
 
+  //Mat img_transformed = Mat(256, 256, CV_32FC1, CV_RGB(0.5, 0.5, 0.5));
+  Mat img_transformed = Mat(256, 256, CV_8UC3, CV_RGB(128, 128, 128));
+  const int img_offset = img_transformed.rows * img_transformed.cols;
 
+  for (int i = 0; i < img_transformed.rows; ++i) {
+    for (int j = 0; j < img_transformed.cols; ++j) {
+      for (int k= 0; k< 3; k++) {
+        img_transformed.at<Vec3b>(i, j).val[k]  = 255* transformed_data[k*img_offset + i*img_transformed.cols + j];
+        //img_transformed.at<uchar>(i, j, k) = transformed_data[k*img_offset + i*img_transformed.cols + j];
+        //LOG(INFO) << "k = " << img_transformed.at<uchar>(i, j, k) << endl;
+        //LOG(INFO) << "k = " << img_transformed.at<Vec3b>(i, j).val[k] << endl;
+        //LOG(INFO) << "transformed_data[] =  " << transformed_data[k*img_offset + i*img_transformed.cols + j]<< endl;
+        //LOG(INFO) << "transformed_data[] =  " << img_transformed.at<Vec3b>(i, j).val[k] << endl;
+    }
+   }
+  }
 
+  Mat img_gray;
+  cvtColor(img_transformed, img_gray, CV_BGR2GRAY);
+  Mat gradient_map_vertical = img_gray.clone();
+  Mat gradient_map_horizontal = img_gray.clone();
 
+  vector<std::pair<int, int> > joint_id_pairs;
+  joint_id_pairs.push_back(std::make_pair(2, 3));   // right shoulder & right elbow
+  joint_id_pairs.push_back(std::make_pair(3, 4));   // right elbow & right wrist
+  joint_id_pairs.push_back(std::make_pair(5, 6));   //left shoulder & left wrist
+  joint_id_pairs.push_back(std::make_pair(6, 7));   //left elbow & left wrist
+  joint_id_pairs.push_back(std::make_pair(8, 9));   // right hip & right knee
+  joint_id_pairs.push_back(std::make_pair(9, 10));  // right knee & right ankle
+  joint_id_pairs.push_back(std::make_pair(11, 12));  // left hip & left knee
+  joint_id_pairs.push_back(std::make_pair(12, 13));  // left knee & left ankle
+
+  for (int pair_id = 0; pair_id < 8; pair_id++){  //For all limb pairs
+
+    int i = joint_id_pairs[pair_id].first;
+    int j = joint_id_pairs[pair_id].second;
+
+    if (meta.joint_self.isVisible[i] == 0 || meta.joint_self.isVisible[j] == 0){
+      //cout<<"--------------invisible----------------"<<endl;
+      continue;
+    }
+
+    Point2f joint_1 = Point2f(meta.joint_self.joints[i].x,
+                              meta.joint_self.joints[i].y);
+    Point2f joint_2 = Point2f(meta.joint_self.joints[j].x,
+                              meta.joint_self.joints[j].y);
+
+    Limb region;
+    getLimbFromJoints(joint_1, joint_2, region);
+
+    //namedWindow("org img", CV_WINDOW_AUTOSIZE);
+    //imshow("org img", img_gray);
+
+    genGradientMaps(img_gray, gradient_map_horizontal, gradient_map_vertical);
+    //dispGradientMaps(gradient_map_horizontal, gradient_map_vertical, false);
+
+    float* histogram = orientBinningForCells(img_gray, region, 1, gradient_map_horizontal, gradient_map_vertical);
+
+    blockNormalization(histogram, 8);
+
+    for (int n = 0; n < 8; n++){
+      transformed_encoded_edge_feature[8*pair_id + n] = histogram[n];
+      //LOG(INFO) << "Encoded Edge Feature "
+       //         << transformed_encoded_edge_feature[8*pair_id + n] << " ";
+    }
+  }
+
+  img_gray.release();
+  img_transformed.release();
+  gradient_map_vertical.release();
+  gradient_map_horizontal.release();
 }
 
 

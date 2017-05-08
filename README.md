@@ -1,37 +1,22 @@
-# Caffe
+# Modified Caffe
 
-[![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
-[![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
+This Caffe branch is a modified version of [Caffe from Convolutional Pose Machine](https://github.com/shihenw/caffe/tree/d154e896b48e8fb520cb4b47af8ba10bf9403382).
 
-Caffe is a deep learning framework made with expression, speed, and modularity in mind.
-It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and community contributors.
+It is designed for [Knowledge-Guided Deep Fractal Neural Networks for Human Pose Estimation](http://github.com/Guanghan/GNet-pose)
 
-Check out the [project site](http://caffe.berkeleyvision.org) for all the details like
+# What's new?
 
-- [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)
-- [Tutorial Documentation](http://caffe.berkeleyvision.org/tutorial/)
-- [BVLC reference models](http://caffe.berkeleyvision.org/model_zoo.html) and the [community model zoo](https://github.com/BVLC/caffe/wiki/Model-Zoo)
-- [Installation instructions](http://caffe.berkeleyvision.org/installation.html)
+- Merged the latest caffe version with the CPM caffe, so that batch normalization layers are available.
+- Modified CPM Data Layer, such that the Data layer outputs transformed image data, annotation data, as well as injected features.
 
-and step-by-step examples.
+# Citation
 
-[![Join the chat at https://gitter.im/BVLC/caffe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/BVLC/caffe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+The details are published as a technical report on arXiv. If you find the code and models useful, please cite the following paper:
+[arXiv:1607.05781](http://arxiv.org/abs/1607.05781).
 
-Please join the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users) or [gitter chat](https://gitter.im/BVLC/caffe) to ask questions and talk about methods and models.
-Framework development discussions and thorough bug reports are collected on [Issues](https://github.com/BVLC/caffe/issues).
-
-Happy brewing!
-
-## License and Citation
-
-Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
-The BVLC reference models are released for unrestricted use.
-
-Please cite Caffe in your publications if it helps your research:
-
-    @article{jia2014caffe,
-      Author = {Jia, Yangqing and Shelhamer, Evan and Donahue, Jeff and Karayev, Sergey and Long, Jonathan and Girshick, Ross and Guadarrama, Sergio and Darrell, Trevor},
-      Journal = {arXiv preprint arXiv:1408.5093},
-      Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
-      Year = {2014}
-    }
+                @article{ning2017knowledge,
+                  title={Knowledge-Guided Deep Fractal Neural Networks for Human Pose Estimation},
+                  author={Ning, Guanghan and Zhang, Zhi and He, Zhihai},
+                  journal={arXiv preprint arXiv:1607.05781},
+                  year={2017}
+                }
