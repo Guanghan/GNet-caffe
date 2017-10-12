@@ -12,11 +12,17 @@ It is designed for [Knowledge-Guided Deep Fractal Neural Networks for Human Pose
 # Citation
 
 The details are published as a technical report on arXiv. If you find the code and models useful, please cite the following paper:
-[arXiv:1607.05781](http://arxiv.org/abs/1607.05781).
+[TMM 2017](http://ieeexplore.ieee.org/document/8064661/).
 
-                @article{ning2017knowledge,
-                  title={Knowledge-Guided Deep Fractal Neural Networks for Human Pose Estimation},
-                  author={Ning, Guanghan and Zhang, Zhi and He, Zhihai},
-                  journal={arXiv preprint arXiv:1607.05781},
-                  year={2017}
-                }
+@ARTICLE{8064661, 
+author={G. Ning and Z. Zhang and Z. He}, 
+journal={IEEE Transactions on Multimedia}, 
+title={Knowledge-Guided Deep Fractal Neural Networks for Human Pose Estimation}, 
+year={2017}, 
+volume={PP}, 
+number={99}, 
+pages={1-1}, 
+keywords={Fractal Networks;Human Pose Estimation;Knowledge-Guided Learning}, 
+doi={10.1109/TMM.2017.2762010}, 
+ISSN={1520-9210}, 
+month={},}
