@@ -10,19 +10,13 @@ It is designed for [Knowledge-Guided Deep Fractal Neural Networks for Human Pose
 - Modified CPM Data Layer, such that the Data layer outputs transformed image data, annotation data, as well as injected features.
 
 # Citation
-
-The details are published as a technical report on arXiv. If you find the code and models useful, please cite the following paper:
+If you find the code and models useful, please cite the following paper:
 [TMM 2017](http://ieeexplore.ieee.org/document/8064661/).
 
-@ARTICLE{8064661, 
-author={G. Ning and Z. Zhang and Z. He}, 
-journal={IEEE Transactions on Multimedia}, 
-title={Knowledge-Guided Deep Fractal Neural Networks for Human Pose Estimation}, 
-year={2017}, 
-volume={PP}, 
-number={99}, 
-pages={1-1}, 
-keywords={Fractal Networks;Human Pose Estimation;Knowledge-Guided Learning}, 
-doi={10.1109/TMM.2017.2762010}, 
-ISSN={1520-9210}, 
-month={},}
+	@article{ning2017knowledge, 
+	   author={G. Ning and Z. Zhang and Z. He}, 
+     journal={IEEE Transactions on Multimedia}, 
+     title={Knowledge-Guided Deep Fractal Neural Networks for Human Pose Estimation}, 
+     year={2017}, 
+     doi={10.1109/TMM.2017.2762010}, 
+     ISSN={1520-9210}, }
